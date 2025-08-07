@@ -102,11 +102,11 @@ def train_and_forecast(df: pd.DataFrame, days: int):
 def plot_results(train, test, pred_test, future_fc, metrics, display_name, horizon_label):
     mape, rmse, r2 = metrics
 
-    # 过滤起始日期
+    # ✅ 只用于图表显示的过滤，不影响模型训练
     cutoff_date = pd.to_datetime("2025-01-25")
-    train = train[train["ds"] >= cutoff_date]
-    test = test[test["ds"] >= cutoff_date]
-    pred_test = pred_test[pred_test["ds"] >= cutoff_date]
+    train_plot = train[train["ds"] >= cutoff_date]
+    test_plot = test[test["ds"] >= cutoff_date]
+    pred_test_plot = pred_test[pred_test["ds"] >= cutoff_date]
 
     st.markdown(f"""
     ### Model Evaluation on Last {horizon_label}
@@ -116,18 +116,22 @@ def plot_results(train, test, pred_test, future_fc, metrics, display_name, horiz
     """)
     plt.style.use("dark_background")
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(train["ds"], train["y"], color="white", label="Train Actual")
-    ax.plot(test["ds"], test["y"], color="#61afef", label="Test Actual")
-    ax.fill_between(pred_test["ds"],
-                    pred_test["yhat_test_lower"],
-                    pred_test["yhat_test_upper"],
-                    color="orange", alpha=0.3, label="95% CI (Test)")
-    ax.plot(pred_test["ds"], pred_test["yhat_test"], "--", color="orange", label="Forecast on Test")
-    ax.fill_between(future_fc["ds"],
-                    future_fc["yhat_lower"],
-                    future_fc["yhat_upper"],
-                    color="gray", alpha=0.2, label="95% CI (Future)")
-    ax.plot(future_fc["ds"], future_fc["yhat"], "--", color="lime", label="Future Forecast")
+    if not train_plot.empty:
+        ax.plot(train_plot["ds"], train_plot["y"], color="white", label="Train Actual")
+    if not test_plot.empty:
+        ax.plot(test_plot["ds"], test_plot["y"], color="#61afef", label="Test Actual")
+    if not pred_test_plot.empty:
+        ax.fill_between(pred_test_plot["ds"],
+                        pred_test_plot["yhat_test_lower"],
+                        pred_test_plot["yhat_test_upper"],
+                        color="orange", alpha=0.3, label="95% CI (Test)")
+        ax.plot(pred_test_plot["ds"], pred_test_plot["yhat_test"], "--", color="orange", label="Forecast on Test")
+    if not future_fc.empty:
+        ax.fill_between(future_fc["ds"],
+                        future_fc["yhat_lower"],
+                        future_fc["yhat_upper"],
+                        color="gray", alpha=0.2, label="95% CI (Future)")
+        ax.plot(future_fc["ds"], future_fc["yhat"], "--", color="lime", label="Future Forecast")
     ax.set_title(f"{display_name} Forecast – {horizon_label}", color="white")
     ax.set_xlabel("Date", color="white"); ax.set_ylabel("Price (USD)", color="white")
     ax.tick_params(colors="white"); ax.legend(facecolor="#2e2f31", edgecolor="white", labelcolor="white")
