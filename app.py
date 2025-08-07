@@ -101,6 +101,13 @@ def train_and_forecast(df: pd.DataFrame, days: int):
 
 def plot_results(train, test, pred_test, future_fc, metrics, display_name, horizon_label):
     mape, rmse, r2 = metrics
+
+    # 过滤起始日期
+    cutoff_date = pd.to_datetime("2025-01-25")
+    train = train[train["ds"] >= cutoff_date]
+    test = test[test["ds"] >= cutoff_date]
+    pred_test = pred_test[pred_test["ds"] >= cutoff_date]
+
     st.markdown(f"""
     ### Model Evaluation on Last {horizon_label}
     - **MAPE:** {mape:.2%}  
