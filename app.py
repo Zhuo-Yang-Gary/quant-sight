@@ -24,7 +24,7 @@ with st.sidebar:
     horizon_label = st.selectbox("Horizon", ["1 Month", "3 Months", "6 Months", "1 Year"])
     horizon_map = {"1 Month": 30, "3 Months": 90, "6 Months": 180, "1 Year": 365}
     forecast_days = horizon_map[horizon_label]
-    run = st.button("Load & Forecast", key="load_forecast_main")
+    run = st.button("Load & Forecast", key="load_forecast_alt_1")
 
 # ——— Author Card on Right ———
 author_html = """
