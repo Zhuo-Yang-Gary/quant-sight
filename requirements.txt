@@ -4,6 +4,9 @@ pandas==2.2.2
 pandas_ta==0.3.14b0
 matplotlib==3.7.5
 scikit-learn==1.3.2
-numpy
-prophet==1.1.5
+numpy==1.26.4
+
+# Prophet 依赖
+Cython>=0.22
 pystan==2.19.1.1
+prophet==1.1.5
