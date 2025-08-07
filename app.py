@@ -8,7 +8,7 @@ from prophet import Prophet
 from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
 
 # ——— Page Configuration ———
-st.set_page_config(page_title="MSFT & NVDA Stock Forecast", layout="wide")
+st.set_page_config(page_title="MSFT Stock Forecast", layout="wide")
 
 # ——— Author Info Banner at Top (Scrolls with page) ———
 with st.container():
@@ -22,12 +22,12 @@ with st.container():
         margin-bottom: 20px;
         font-size: 14px;
     '>
-        <strong>About the Author</strong> — Zhuo Yang, B.Sc. Computing (Software Development), University of Sydney (2023–2026). 
-        Location: Wolli Creek, NSW · <a href="mailto:gravsonvana@outlook.com" style="color:#79b8ff;">gravsonvana@outlook.com</a> · +61 431 598 186
+        <strong>About the Author</strong> — Zhuo Yang, B.Computing (Software Development), University of Sydney (2023–2026). 
+        Location: Wolli Creek, NSW · <a href="mailto:graysonyang@outlook.com" style="color:#79b8ff;">graysonyang@outlook.com</a> · +61 431 598 186
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>MSFT Future Price Forecast</h1>", unsafe_allow_html=True)
 
 # ——— Sidebar ———
 
@@ -41,7 +41,7 @@ with st.sidebar:
     """)
 
     st.header("Select Company")
-    company = st.selectbox("Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
+    company = st.selectbox("Company", ["Microsoft (MSFT)"])
     st.header("Forecast Horizon")
     horizon_label = st.selectbox("Horizon", ["1 Month", "3 Months", "6 Months", "1 Year"])
     horizon_map = {"1 Month": 30, "3 Months": 90, "6 Months": 180, "1 Year": 365}
@@ -52,7 +52,6 @@ with st.sidebar:
 def load_data(ticker: str) -> pd.DataFrame:
     path_map = {
         "MSFT": "data/Microsoft_stock_data.csv",
-        "NVDA": "data/nvda_stock_data.csv"
     }
     path = path_map.get(ticker)
     if path and os.path.exists(path):
@@ -140,7 +139,7 @@ def plot_results(train, test, pred_test, future_fc, metrics, display_name, horiz
 
 # ——— Main Execution ———
 if run:
-    ticker = "MSFT" if "Microsoft" in company else "NVDA"
+    ticker = "MSFT"
     df = load_data(ticker)
     display_name = company
     if df.empty:
