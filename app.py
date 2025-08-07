@@ -1,100 +1,87 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
-from sklearn.linear_model import LinearRegression
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from datetime import datetime, timedelta
+import re
+import time
 
-# ========== PAGE CONFIG ==========
+# 页面配置
 st.set_page_config(page_title="AI Stock Forecast Dashboard", layout="wide")
-st.title("🤖 AI Sector Stock Trend Forecast (1M / 3M / 6M / 1Y)")
+st.title("AI Stock Forecast Dashboard")
 
-# ========== SELECTED STOCKS ==========
-stock_dict = {
-    "NVIDIA (NVDA)": "NVDA",
-    "Microsoft (MSFT)": "MSFT",
-    "Alphabet (GOOGL)": "GOOGL",
-    "Meta Platforms (META)": "META",
-    "Amazon (AMZN)": "AMZN"
+# ——— 左侧：输入股票代码与按钮 ———
+ticker_input = st.sidebar.text_input("Ticker (1–4 letters)", max_chars=4)
+ticker = ticker_input.strip().upper()
+if ticker and not re.fullmatch(r"[A-Z]{1,4}", ticker):
+    st.sidebar.error("Invalid format: Please enter 1–4 letters (A–Z only).")
+    st.stop()
+
+forecast_options = {
+    "1 Month": 22,
+    "3 Months": 66,
+    "6 Months": 132,
+    "1 Year": 264
 }
+forecast_label = st.sidebar.selectbox("Forecast Horizon", list(forecast_options.keys()))
+forecast_days = forecast_options[forecast_label]
 
-# ========== LAYOUT COLUMNS ==========
-left, main, right = st.columns([1, 3, 1])
+if st.sidebar.button("Load & Forecast", use_container_width=True):
+    if not ticker:
+        st.sidebar.error("Please input a ticker code.")
+        st.stop()
 
-# ========== LEFT SIDEBAR ==========
-with left:
-    st.header("🧠 Select a Company")
-    company_name = st.selectbox("Company", list(stock_dict.keys()))
-    ticker = stock_dict[company_name]
+    # ——— 进度条显示下载与计算过程 ———
+    progress = st.progress(0, text="Starting...")
+    time.sleep(0.2)
+    progress.progress(20, text="Downloading data...")
 
-# ========== DATE RANGE ==========
-end_date = datetime.today().date()
-start_date = end_date - timedelta(days=365 * 2)
+    today = datetime.today().strftime("%Y-%m-%d")
+    df = yf.download(ticker, start="2020-01-01", end=today)
 
-# ========== FETCH DATA ==========
-@st.cache_data
-def fetch_stock_data(ticker):
-    try:
-        data = yf.download(ticker, start=start_date, end=end_date)
-        data.dropna(inplace=True)
-        return data
-    except:
-        return pd.DataFrame()
+    progress.progress(60, text="Processing data...")
+    time.sleep(0.2)
 
-data = fetch_stock_data(ticker)
+    if df.empty:
+        st.error(f"No data found for '{ticker}'.")
+        progress.empty()
+        st.stop()
 
-# ========== MAIN DISPLAY ==========
-with main:
-    if data.empty:
-        st.error("⚠️ Failed to retrieve stock data. Please check the ticker or network connection.")
-    else:
-        st.subheader(f"📈 Historical Closing Price: {ticker}")
-        st.line_chart(data["Close"])
+    df.reset_index(inplace=True)
+    df["Days"] = np.arange(len(df)).reshape(-1, 1)
+    model = LinearRegression().fit(df[["Days"]], df["Close"])
+    future_x = np.arange(len(df), len(df) + forecast_days).reshape(-1, 1)
+    future_y = model.predict(future_x)
+    future_dates = pd.date_range(df["Date"].iloc[-1] + timedelta(days=1), periods=forecast_days)
 
-        # Forecasting
-        df = data.copy()
-        df["Days"] = np.arange(len(df)).reshape(-1, 1)
-        X = df["Days"]
-        y = df["Close"]
+    progress.progress(100, text="Complete!")
+    time.sleep(0.3)
+    progress.empty()
 
-        model = LinearRegression().fit(X, y)
+    # ——— 图表展示 ———
+    st.subheader(f"{ticker} Historical & {forecast_label} Forecast")
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df["Date"], df["Close"], label="Historical")
+    ax.plot(future_dates, future_y, linestyle="--", label="Forecast")
+    ax.set_title(f"{ticker} Forecast")
+    ax.legend()
+    st.pyplot(fig)
 
-        future_periods = {
-            "1 Month": 22,
-            "3 Months": 66,
-            "6 Months": 132,
-            "1 Year": 264
-        }
-
-        fig, ax = plt.subplots(figsize=(12, 5))
-        ax.plot(data.index, data["Close"], label="Historical Price")
-
-        for label, days in future_periods.items():
-            future_x = np.arange(len(df), len(df) + days).reshape(-1, 1)
-            future_y = model.predict(future_x)
-            future_dates = pd.date_range(data.index[-1] + timedelta(days=1), periods=days)
-            ax.plot(future_dates, future_y, linestyle="--", label=f"{label} Forecast")
-
-        ax.set_title(f"{company_name} Forecast (Linear Regression)")
-        ax.legend()
-        st.pyplot(fig)
-
-# ========== RIGHT SIDEBAR (ABOUT) ==========
-with right:
-    st.header("👤 About the Author")
-    st.markdown("""
-    **Zhuo Yang**  
-    Bachelor of Computing, Major in Software Development  
-    University of Sydney | Jul 2023 – Mar 2026  
-
-    📍 Wolli Creek, NSW  
-    📧 graysonyang@outlook.com  
-    📱 +61 431 598 186
-
-    🔗 [GitHub Profile](https://github.com/Zhuo-Yang-Gary)
-
-    ---
-    This project demonstrates the ability to build interactive data-driven dashboards,  
-    apply linear modeling for forecasting, and visualize real-world AI sector stock trends.
-    """)
+# ——— 右侧：固定作者卡片 ———
+author_card = """
+<div style='position:fixed; right:30px; top:100px; width:320px;
+            background-color:#2c2c2c; color:white; padding:20px;
+            border-radius:12px; box-shadow:0px 4px 12px rgba(0,0,0,0.3);'>
+  <h3>About the Author</h3>
+  <p><strong>Zhuo Yang</strong></p>
+  <p>B.Sc. Computing, Software Development</p>
+  <p>University of Sydney (2023–2026)</p>
+  <hr style='border:0.5px solid #444;'/>
+  <p>Wolli Creek, NSW</p>
+  <p>Email: <a href='mailto:graysonyang@outlook.com' style='color:#9cf;'>graysonyang@outlook.com</a></p>
+  <p><a href='https://github.com/Zhuo-Yang-Gary' target='_blank' style='color:#9cf;'>GitHub Profile</a></p>
+</div>
+"""
+st.markdown(author_card, unsafe_allow_html=True)
