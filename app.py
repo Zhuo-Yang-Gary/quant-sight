@@ -143,7 +143,7 @@ def plot_results(train, test, pred_test, future_fc, metrics, display_name, horiz
     st.pyplot(fig)
     st.markdown("""
 > ⚠️ **Note:**  
-> You might notice that the actual stock price (blue line) drops sharply starting early 2025, while the forecasted line (orange dashed) keeps going up.  
+> You might notice that the actual stock price (blue line) and the forecasted line (orange dashed) have big difference here. 
 > This happens because the Prophet model is based on historical trends and doesn't respond well to sudden market shifts or unexpected events.  
 > That’s also why the R² is quite low here. If needed, we can look into combining this with other models like XGBoost or LSTM to handle these cases better.
 """)
