@@ -12,7 +12,16 @@ st.set_page_config(page_title="MSFT & NVDA Stock Forecast", layout="wide")
 st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</h1>", unsafe_allow_html=True)
 
 # ——— Sidebar ———
+
 with st.sidebar:
+    st.title("Stock Forecast App")
+    st.markdown("""
+    **Instructions**:
+    - Select a company to forecast.
+    - Choose forecast horizon (e.g., 1 Year).
+    - Click `Load & Forecast` to view prediction.
+    """)
+
     st.header("Select Company")
     company = st.selectbox("Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
     st.header("Forecast Horizon")
@@ -21,7 +30,37 @@ with st.sidebar:
     forecast_days = horizon_map[horizon_label]
     run = st.button("Load & Forecast")
 
-# ——— Author Card on Right ———
+
+# ——— Author Card (Fixed Bottom Right) ———
+st.markdown("""
+<style>
+.author-card {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #2d2d2d;
+    padding: 15px;
+    border-radius: 10px;
+    color: white;
+    z-index: 9999;
+    max-width: 300px;
+}
+.author-card a {
+    color: #79b8ff;
+}
+</style>
+
+<div class="author-card">
+    <strong>About the Author</strong><br>
+    Zhuo Yang<br>
+    B.Sc. Computing, Software Development<br>
+    University of Sydney (2023–2026)<br>
+    Location: Wolli Creek, NSW<br>
+    +61 431 598 186<br>
+    <a href="mailto:gravsonvana@outlook.com">gravsonvana@outlook.com</a>
+</div>
+""", unsafe_allow_html=True)
+
 author_html = """
 <style>
 #author-card {
