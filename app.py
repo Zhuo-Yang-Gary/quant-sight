@@ -4,9 +4,19 @@ import numpy as np
 st.set_page_config(layout="wide")  # 宽屏模式
 
 
+with st.sidebar:
+    st.markdown("### 使用说明")
+    st.markdown("请选择公司和预测时间范围后点击下方按钮开始预测。")
+    company = st.selectbox("Select Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
+    horizon = st.selectbox("Forecast Horizon", ["1 Month", "3 Months", "6 Months"])
+    if st.button("Load & Forecast"):
+        pass  # 防止缩进错误，按钮逻辑实际在主流程处理
+
+
 main_col, author_col = st.columns([5, 1])
 with main_col:
 
+    import streamlit as st
     import pandas as pd
     import numpy as np
     import os
@@ -15,19 +25,19 @@ with main_col:
     from prophet import Prophet
     from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
 
-    # ——— Page Configuration ———
-    st.set_page_config(page_title="MSFT & NVDA Stock Forecast", layout="wide")
-    st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</h1>", unsafe_allow_html=True)
+# ——— Page Configuration ———
+st.set_page_config(page_title="MSFT & NVDA Stock Forecast", layout="wide")
+st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</h1>", unsafe_allow_html=True)
 
-    # ——— Sidebar ———
-    with st.sidebar:
-        st.header("Select Company")
-        company = st.selectbox("Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
-        st.header("Forecast Horizon")
-        horizon_label = st.selectbox("Horizon", ["1 Month", "3 Months", "6 Months", "1 Year"])
-        horizon_map = {"1 Month": 30, "3 Months": 90, "6 Months": 180, "1 Year": 365}
-        forecast_days = horizon_map[horizon_label]
-        run = st.button("Load & Forecast")
+# ——— Sidebar ———
+with st.sidebar:
+    st.header("Select Company")
+    company = st.selectbox("Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
+    st.header("Forecast Horizon")
+    horizon_label = st.selectbox("Horizon", ["1 Month", "3 Months", "6 Months", "1 Year"])
+    horizon_map = {"1 Month": 30, "3 Months": 90, "6 Months": 180, "1 Year": 365}
+    forecast_days = horizon_map[horizon_label]
+    run = st.button("Load & Forecast")
 
 # ——— Author Card on Right ———
 author_html = """
