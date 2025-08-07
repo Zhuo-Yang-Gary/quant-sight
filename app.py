@@ -1,26 +1,3 @@
-
-import streamlit as st
-import numpy as np
-st.set_page_config(layout="wide")  # 宽屏模式
-
-
-with st.sidebar:
-    st.markdown("### 使用说明")
-    st.markdown("请选择公司和预测时间范围后点击下方按钮开始预测。")
-    company = st.selectbox("Select Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
-    horizon = st.selectbox("Forecast Horizon", ["1 Month", "3 Months", "6 Months"])
-    load = st.button("Load & Forecast")
-    st.markdown("### 使用说明")
-    st.markdown("请选择公司和预测时间范围后点击下方按钮开始预测。")
-    company = st.selectbox("Select Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
-    horizon = st.selectbox("Forecast Horizon", ["1 Month", "3 Months", "6 Months"])
-    if st.button("Load & Forecast"):
-        pass  # 防止缩进错误，按钮逻辑实际在主流程处理
-
-
-main_col, author_col = st.columns([5, 1])
-with main_col:
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -161,18 +138,25 @@ if run:
         train_df, test_df, pred_test, future_fc, metrics = train_and_forecast(df, forecast_days)
         plot_results(train_df, test_df, pred_test, future_fc, metrics, display_name, horizon_label)
 
-with author_col:
-    st.markdown(
-        """
-        <div style="background-color:#1e1e1e; padding:20px; border-radius:10px; height:100%; line-height:1.6;">
-            <h4 style="color:white;">About the Author</h4>
-            <p style="color:white;">Zhuo Yang<br>
-            B.Sc. Computing, Software Development<br>
-            University of Sydney (2023–2026)<br><br>
-            Location: Wolli Creek, NSW<br>
-            +61 431 598 186<br>
-            <a style="color:skyblue;" href="mailto:gravsonvana@outlook.com">gravsonvana@outlook.com</a></p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# The following two columns blocks should not be present at the same time and are redundant.
+# The code below is also incorrectly formatted.
+# main_col, author_col = st.columns([5, 1])
+# with main_col:
+
+# with author_col:
+#     st.markdown(
+#         """
+#         <div style="background-color:#1e1e1e; padding:20px; border-radius:10px; height:100%; line-height:1.6;">
+#             <h4 style="color:white;">About the Author</h4>
+#             <p style="color:white;">Zhuo Yang<br>
+#             B.Sc. Computing, Software Development<br>
+#             University of Sydney (August 2023 – March 2026)<br><br>
+#             Location: Wolli Creek, NSW<br>
+#             +61 431 598 186<br>
+#             <a style="color:skyblue;" href="mailto:graysonyang@outlook.com">graysonyang@outlook.com</a></p>
+#         </div>
+#         """,
+#         unsafe_allow_html=True
+#     )
+
+```
