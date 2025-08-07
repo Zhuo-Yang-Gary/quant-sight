@@ -1,11 +1,7 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-from datetime import timedelta
-from prophet import Prophet
-from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
+
+# ——— 必须第一行调用 ———
+st.set_page_config(page_title="MSFT & NVDA Stock Forecast", layout="wide")
 
 # ——— 全局CSS（Times New Roman + 间距） ———
 st.markdown("""
@@ -20,12 +16,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ——— 页面配置 ———
-st.set_page_config(page_title="MSFT & NVDA Stock Forecast", layout="wide")
-
 # ——— 标题 ———
-st.markdown("<h1 style='text-align: center; margin-bottom: 2rem;'>MSFT & NVDA Future Price Forecast</h1>",
-            unsafe_allow_html=True)
+st.markdown(
+    "<h1 style='text-align: center; margin-bottom: 2rem;'>MSFT & NVDA Future Price Forecast</h1>",
+    unsafe_allow_html=True
+)
 
 # ——— 侧边栏 ———
 with st.sidebar:
@@ -66,7 +61,14 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# ——— 数据加载 & 预测 ———
+# ——— Helper Functions ———
+import pandas as pd
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+from prophet import Prophet
+from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
+
 def load_data(ticker: str) -> pd.DataFrame:
     path_map = {
         "MSFT": "data/Microsoft_stock_data.csv",
@@ -89,17 +91,21 @@ def train_and_forecast(df: pd.DataFrame, days: int):
     future = model.make_future_dataframe(periods=days)
     forecast = model.predict(future)
 
-    # 测试期预测
     pred_test = (
         forecast.set_index("ds")
                 .reindex(test_df["ds"])
-                .rename(columns={"yhat":"yhat_test","yhat_lower":"yhat_test_lower","yhat_upper":"yhat_test_upper"})
+                .rename(columns={
+                    "yhat": "yhat_test",
+                    "yhat_lower": "yhat_test_lower",
+                    "yhat_upper": "yhat_test_upper"
+                })
                 .reset_index()
     )
-    # 未来期预测
-    future_fc = forecast[forecast["ds"] > train_df["ds"].max()][["ds","yhat","yhat_lower","yhat_upper"]].copy()
 
-    # 评估指标
+    future_fc = forecast[forecast["ds"] > train_df["ds"].max()][
+        ["ds", "yhat", "yhat_lower", "yhat_upper"]
+    ].copy()
+
     y_true = test_df["y"].values
     y_pred = pred_test["yhat_test"].values
     mape = mean_absolute_percentage_error(y_true, y_pred)
@@ -110,6 +116,7 @@ def train_and_forecast(df: pd.DataFrame, days: int):
 
 def plot_results(train, test, pred_test, future_fc, metrics, display_name, horizon_label):
     mape, rmse, r2 = metrics
+
     st.markdown(f"""
         <div style="margin-top:2rem; margin-bottom:1rem;">
           <h3>Model Evaluation on Last {horizon_label}</h3>
@@ -124,39 +131,41 @@ def plot_results(train, test, pred_test, future_fc, metrics, display_name, horiz
     plt.style.use("dark_background")
     fig, ax = plt.subplots(figsize=(10, 5))
 
-    # 画历史与测试实际
     ax.plot(train["ds"], train["y"], color="white", label="Train Actual")
     ax.plot(test["ds"], test["y"], color="#61afef", label="Test Actual")
 
-    # 测试区间预测 & CI
-    ax.fill_between(pred_test["ds"],
-                    pred_test["yhat_test_lower"],
-                    pred_test["yhat_test_upper"],
-                    color="orange", alpha=0.3, label="95% CI (Test)")
+    ax.fill_between(
+        pred_test["ds"],
+        pred_test["yhat_test_lower"],
+        pred_test["yhat_test_upper"],
+        color="orange", alpha=0.3, label="95% CI (Test)"
+    )
     ax.plot(pred_test["ds"], pred_test["yhat_test"], "--", color="orange", label="Forecast on Test")
 
-    # 未来区间预测 & CI
-    ax.fill_between(future_fc["ds"],
-                    future_fc["yhat_lower"],
-                    future_fc["yhat_upper"],
-                    color="gray", alpha=0.2, label="95% CI (Future)")
+    ax.fill_between(
+        future_fc["ds"],
+        future_fc["yhat_lower"],
+        future_fc["yhat_upper"],
+        color="gray", alpha=0.2, label="95% CI (Future)"
+    )
     ax.plot(future_fc["ds"], future_fc["yhat"], "--", color="lime", label="Future Forecast")
 
     ax.set_title(f"{display_name} Forecast – {horizon_label}", color="white")
-    ax.set_xlabel("Date", color="white"); ax.set_ylabel("Price (USD)", color="white")
+    ax.set_xlabel("Date", color="white")
+    ax.set_ylabel("Price (USD)", color="white")
     ax.tick_params(colors="white")
     ax.legend(facecolor="#2e2f31", edgecolor="white", labelcolor="white")
 
-    # 中心对齐：放到一列中间位置
     col1, col2, col3 = st.columns([1, 6, 1])
     with col2:
         st.pyplot(fig)
 
-# ——— 主流程 ———
+# ——— Main Execution ———
 if run:
     ticker = "MSFT" if "Microsoft" in company else "NVDA"
-    df = load_data(ticker)
     display_name = company
+    df = load_data(ticker)
+
     if df.empty:
         st.error("No data available. Please check the CSV file.")
     else:
