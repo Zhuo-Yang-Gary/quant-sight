@@ -63,12 +63,17 @@ def load_data(ticker: str) -> pd.DataFrame:
     return pd.DataFrame()
 
 def train_and_forecast(df: pd.DataFrame, days: int):
+    # ✅ 从 2020 年开始使用数据进行训练
+    df = df[df["ds"] >= "2020-01-01"].copy()
+    
     train_df = df.iloc[:-days].copy()
     test_df = df.iloc[-days:].copy()
+
     m = Prophet(daily_seasonality=True)
     m.fit(train_df)
     future = m.make_future_dataframe(periods=days)
     forecast = m.predict(future)
+    
     pred_test = (
         forecast.set_index("ds")
                 .reindex(test_df["ds"])
@@ -80,15 +85,10 @@ def train_and_forecast(df: pd.DataFrame, days: int):
     future_fc = forecast[forecast["ds"] > train_df["ds"].max()][
         ["ds", "yhat", "yhat_lower", "yhat_upper"]
     ].copy()
+
+    # 模型评估
     y_true = test_df["y"].values
     y_pred = pred_test["yhat_test"].values
-    import numpy as np
-    mask = np.isfinite(y_true) & np.isfinite(y_pred)
-    y_true_clean = y_true[mask]
-    y_pred_clean = y_pred[mask]
-    if len(y_true_clean) == 0:
-        raise ValueError("All values in y_true or y_pred are NaN or inf.")
-    import numpy as np
     mask = np.isfinite(y_true) & np.isfinite(y_pred)
     y_true_clean = y_true[mask]
     y_pred_clean = y_pred[mask]
@@ -97,12 +97,13 @@ def train_and_forecast(df: pd.DataFrame, days: int):
     mape = mean_absolute_percentage_error(y_true_clean, y_pred_clean)
     rmse = mean_squared_error(y_true_clean, y_pred_clean, squared=False)
     r2 = r2_score(y_true_clean, y_pred_clean)
+
     return train_df, test_df, pred_test, future_fc, (mape, rmse, r2)
 
 def plot_results(train, test, pred_test, future_fc, metrics, display_name, horizon_label):
     mape, rmse, r2 = metrics
 
-    # ✅ 只用于图表显示的过滤，不影响模型训练
+    # ✅ 图表显示从 2025-01-25 起
     cutoff_date = pd.to_datetime("2025-01-25")
     train_plot = train[train["ds"] >= cutoff_date]
     test_plot = test[test["ds"] >= cutoff_date]
