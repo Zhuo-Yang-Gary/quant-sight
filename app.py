@@ -16,14 +16,14 @@ with st.sidebar:
 main_col, author_col = st.columns([5, 1])
 with main_col:
 
-    import streamlit as st
-    import pandas as pd
-    import numpy as np
-    import os
-    import matplotlib.pyplot as plt
-    from datetime import timedelta
-    from prophet import Prophet
-    from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
+import streamlit as st
+import pandas as pd
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+from datetime import timedelta
+from prophet import Prophet
+from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
 
 # ——— Page Configuration ———
 st.set_page_config(page_title="MSFT & NVDA Stock Forecast", layout="wide")
