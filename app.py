@@ -13,18 +13,13 @@ st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</
 
 # ——— Sidebar ———
 with st.sidebar:
-    st.markdown("### 使用说明")
-    st.markdown("请选择公司和预测时间范围后点击下方按钮开始预测。")
-    company = st.selectbox("Select Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
-    horizon = st.selectbox("Forecast Horizon", ["1 Month", "3 Months", "6 Months"])
-    load = st.button("Load & Forecast", key="load_forecast_main")
     st.header("Select Company")
     company = st.selectbox("Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
     st.header("Forecast Horizon")
     horizon_label = st.selectbox("Horizon", ["1 Month", "3 Months", "6 Months", "1 Year"])
     horizon_map = {"1 Month": 30, "3 Months": 90, "6 Months": 180, "1 Year": 365}
     forecast_days = horizon_map[horizon_label]
-    run = st.button("Load & Forecast", key="load_forecast_alt_1")
+    run = st.button("Load & Forecast")
 
 # ——— Author Card on Right ———
 author_html = """
@@ -95,9 +90,15 @@ def train_and_forecast(df: pd.DataFrame, days: int):
     y_pred_clean = y_pred[mask]
     if len(y_true_clean) == 0:
         raise ValueError("All values in y_true or y_pred are NaN or inf.")
+    import numpy as np
+    mask = np.isfinite(y_true) & np.isfinite(y_pred)
+    y_true_clean = y_true[mask]
+    y_pred_clean = y_pred[mask]
+    if len(y_true_clean) == 0:
+        raise ValueError("All values in y_true or y_pred are NaN or inf.")
     mape = mean_absolute_percentage_error(y_true_clean, y_pred_clean)
-    rmse = mean_squared_error(y_true, y_pred, squared=False)
-    r2 = r2_score(y_true, y_pred)
+    rmse = mean_squared_error(y_true_clean, y_pred_clean, squared=False)
+    r2 = r2_score(y_true_clean, y_pred_clean)
     return train_df, test_df, pred_test, future_fc, (mape, rmse, r2)
 
 def plot_results(train, test, pred_test, future_fc, metrics, display_name, horizon_label):
@@ -137,36 +138,3 @@ if run:
     else:
         train_df, test_df, pred_test, future_fc, metrics = train_and_forecast(df, forecast_days)
         plot_results(train_df, test_df, pred_test, future_fc, metrics, display_name, horizon_label)
-
-# The following two columns blocks should not be present at the same time and are redundant.
-# The code below is also incorrectly formatted.
-# main_col, author_col = st.columns([5, 1])
-# with main_col:
-
-# with author_col:
-#     st.markdown(
-#         """
-#         <div style="background-color:#1e1e1e; padding:20px; border-radius:10px; height:100%; line-height:1.6;">
-#             <h4 style="color:white;">About the Author</h4>
-#             <p style="color:white;">Zhuo Yang<br>
-#             B.Sc. Computing, Software Development<br>
-#             University of Sydney (2023–2026)<br><br>
-#             Location: Wolli Creek, NSW<br>
-#             +61 431 598 186<br>
-#             <a style="color:skyblue;" href="mailto:gravsonvana@outlook.com">gravsonvana@outlook.com</a></p>
-#         </div>
-#         """,
-#         unsafe_allow_html=True
-#     )
-
-
-st.sidebar.markdown("---")
-st.sidebar.markdown("#### About the Author")
-st.sidebar.markdown(
-    """
-    **Zhuo Yang**  
-    - Software Developer  
-    - Focus: Quantitative Finance, Forecast Modeling  
-    - [GitHub](https://github.com/yourname) | [LinkedIn](https://linkedin.com/in/yourname)
-    """
-)
