@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -151,13 +150,11 @@ if run:
 #             <h4 style="color:white;">About the Author</h4>
 #             <p style="color:white;">Zhuo Yang<br>
 #             B.Sc. Computing, Software Development<br>
-#             University of Sydney (August 2023 – March 2026)<br><br>
+#             University of Sydney (2023–2026)<br><br>
 #             Location: Wolli Creek, NSW<br>
 #             +61 431 598 186<br>
-#             <a style="color:skyblue;" href="mailto:graysonyang@outlook.com">graysonyang@outlook.com</a></p>
+#             <a style="color:skyblue;" href="mailto:gravsonvana@outlook.com">gravsonvana@outlook.com</a></p>
 #         </div>
 #         """,
 #         unsafe_allow_html=True
 #     )
-
-```
