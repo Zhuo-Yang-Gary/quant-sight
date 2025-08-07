@@ -1,92 +1,100 @@
 import streamlit as st
-import yfinance as yf
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import os
+from datetime import timedelta
 from sklearn.linear_model import LinearRegression
-from datetime import datetime, timedelta
-import time
+import matplotlib.pyplot as plt
 
-# 页面基本配置
-st.set_page_config(page_title="MSFT & NVDA Forecast", layout="wide")
-st.title("MSFT & NVDA Future Price Forecast")
+st.set_page_config(layout="wide")
 
-# ——— 侧边栏：公司与预测时长选择 ———
-company = st.sidebar.selectbox(
-    "Select Company",
-    ["Microsoft (MSFT)", "NVIDIA (NVDA)"]
-)
-ticker = "MSFT" if company.startswith("Microsoft") else "NVDA"
+# ---------------- Sidebar: Stock Input -------------------
+with st.sidebar:
+    st.markdown("### Select Company")
+    stock_option = st.selectbox(
+        "Company",
+        options=["Microsoft (MSFT)", "NVIDIA (NVDA)"]
+    )
+    ticker = stock_option.split("(")[-1].replace(")", "")
 
-forecast_options = {
-    "1 Month": 22,
-    "3 Months": 66,
-    "6 Months": 132,
-    "1 Year": 264
-}
-forecast_label = st.sidebar.selectbox("Forecast Horizon", list(forecast_options.keys()))
-forecast_days = forecast_options[forecast_label]
+    st.markdown("### Forecast Horizon")
+    forecast_horizon = st.selectbox(
+        "Forecast Horizon",
+        options=["1 Month", "3 Months", "6 Months", "1 Year"]
+    )
 
-# ——— 侧边栏：触发按钮 ———
-if st.sidebar.button("Load & Forecast", use_container_width=True):
+    if forecast_horizon == "1 Month":
+        forecast_days = 30
+    elif forecast_horizon == "3 Months":
+        forecast_days = 90
+    elif forecast_horizon == "6 Months":
+        forecast_days = 180
+    elif forecast_horizon == "1 Year":
+        forecast_days = 365
 
-    # 进度条：开始 → 下载 → 处理 → 完成
-    progress = st.progress(0, text="Initializing...")
-    time.sleep(0.1)
-    progress.progress(20, text="Downloading historical data...")
+    run_forecast = st.button("Load & Forecast")
 
-    # 下载过去三年数据
-    end_date = datetime.today().strftime("%Y-%m-%d")
-    start_date = (datetime.today() - timedelta(days=3*365)).strftime("%Y-%m-%d")
-    df = yf.download(ticker, start=start_date, end=end_date)
+# ---------------- Author Card -------------------
+with st.sidebar:
+    st.markdown("---")
+    with st.container():
+        st.markdown(
+            """
+            <div style="background-color: #2c2c2c; padding: 15px; border-radius: 10px; color: white;">
+                <h4 style="margin-bottom: 10px;">About the Author</h4>
+                <p style="margin: 0;"><strong>Zhuo Yang</strong><br/>
+                B.Sc. Computing, Software Development<br/>
+                University of Sydney (2023–2026)</p>
+                <p style="margin: 0;">Location: Wolli Creek, NSW</p>
+                <p style="margin: 0;">Email: <a href="mailto:gravsonvana@outlook.com" style="color: lightblue;">gravsonvana@outlook.com</a></p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-    progress.progress(60, text="Processing data...")
-    time.sleep(0.1)
+# ---------------- Main Section -------------------
+st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</h1>", unsafe_allow_html=True)
 
-    # 检查数据有效性
-    if df.empty:
-        st.error(f"No data found for {ticker}.")
-        progress.empty()
-    else:
-        # 线性回归预测
-        df = df.reset_index()
-        df["Days"] = np.arange(len(df)).reshape(-1, 1)
-        model = LinearRegression().fit(df[["Days"]], df["Close"])
-        future_x = np.arange(len(df), len(df) + forecast_days).reshape(-1, 1)
-        future_y = model.predict(future_x)
-        future_dates = pd.date_range(df["Date"].iloc[-1] + timedelta(days=1), periods=forecast_days)
+def load_csv(ticker):
+    file_map = {
+        "MSFT": "Microsoft_stock_data.csv",
+        "NVDA": "nvda_stock_data.csv"
+    }
+    file = file_map.get(ticker.upper())
+    if file and os.path.exists(file):
+        df = pd.read_csv(file, parse_dates=["Date"])
+        df = df[["Date", "Close"]].dropna().sort_values("Date")
+        return df
+    return None
 
-        progress.progress(100, text="Forecast complete")
-        time.sleep(0.2)
-        progress.empty()
+def forecast_stock(df, forecast_days):
+    df = df.copy()
+    df["Date_ordinal"] = df["Date"].map(pd.Timestamp.toordinal)
+    model = LinearRegression()
+    model.fit(df[["Date_ordinal"]], df["Close"])
 
-        # 可视化历史价格与预测
-        st.subheader(f"{company} Historical & {forecast_label} Forecast")
+    future_dates = [df["Date"].max() + timedelta(days=i) for i in range(1, forecast_days + 1)]
+    future_ordinals = [d.toordinal() for d in future_dates]
+    predictions = model.predict(np.array(future_ordinals).reshape(-1, 1))
+
+    future_df = pd.DataFrame({
+        "Date": future_dates,
+        "Predicted Close": predictions
+    })
+    return df, future_df
+
+if run_forecast:
+    data = load_csv(ticker)
+    if data is not None:
+        historical, forecasted = forecast_stock(data, forecast_days)
+
         fig, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(df["Date"], df["Close"], label="Historical")
-        ax.plot(future_dates, future_y, linestyle="--", label="Forecast")
-        ax.set_title(f"{ticker} Price Forecast")
+        ax.plot(historical["Date"], historical["Close"], label="Historical Close", color="skyblue")
+        ax.plot(forecasted["Date"], forecasted["Predicted Close"], label="Forecasted Close", linestyle="--", color="orange")
+        ax.set_title(f"{ticker} Stock Price Forecast ({forecast_horizon})")
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Price (USD)")
         ax.legend()
         st.pyplot(fig)
-
-# ——— 固定右上：作者介绍卡片 ———
-author_card = """
-<div style="
-    position:fixed; top:20px; right:20px;
-    width:240px; max-height:300px; overflow:auto;
-    background-color:#2c2c2c; color:#ffffff;
-    padding:15px; border-radius:12px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.3);
-    z-index:100;
-">
-  <h4 style="margin:0 0 10px 0;">About the Author</h4>
-  <p style="margin:0;"><strong>Zhuo Yang</strong></p>
-  <p style="margin:0;">B.Sc. Computing, Software Development</p>
-  <p style="margin:0;">University of Sydney (2023–2026)</p>
-  <hr style="border:0.5px solid #444; margin:10px 0;"/>
-  <p style="margin:0;">Location: Wolli Creek, NSW</p>
-  <p style="margin:0;">Email: <a href="mailto:graysonyang@outlook.com" style="color:#9cf;">graysonyang@outlook.com</a></p>
-  <p style="margin:0;"><a href="https://github.com/Zhuo-Yang-Gary" target="_blank" style="color:#9cf;">GitHub Profile</a></p>
-</div>
-"""
-st.markdown(author_card, unsafe_allow_html=True)
+    else:
+        st.error("No data available. Please check the CSV file.")
