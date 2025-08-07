@@ -44,8 +44,9 @@ with st.sidebar:
                 <h4 style="margin-bottom: 10px;">About the Author</h4>
                 <p style="margin: 0;"><strong>Zhuo Yang</strong><br/>
                 B.Sc. Computing, Software Development<br/>
-                University of Sydney (2023–2026)</p>
+                University of Sydney (August 2023–March 2026)</p>
                 <p style="margin: 0;">Location: Wolli Creek, NSW</p>
+                <p style="margin: 0;">Phone: +61 431 598 186</p>
                 <p style="margin: 0;">Email: <a href="mailto:gravsonvana@outlook.com" style="color: lightblue;">gravsonvana@outlook.com</a></p>
             </div>
             """,
@@ -60,7 +61,7 @@ def load_csv(ticker):
         "MSFT": "Microsoft_stock_data.csv",
         "NVDA": "nvda_stock_data.csv"
     }
-    file = file_map.get(ticker.upper())
+    file = os.path.join("data", file_map.get(ticker.upper(), ""))
     if file and os.path.exists(file):
         df = pd.read_csv(file, parse_dates=["Date"])
         df = df[["Date", "Close"]].dropna().sort_values("Date")
