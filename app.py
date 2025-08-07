@@ -84,7 +84,13 @@ def train_and_forecast(df: pd.DataFrame, days: int):
     ].copy()
     y_true = test_df["y"].values
     y_pred = pred_test["yhat_test"].values
-    mape = mean_absolute_percentage_error(y_true, y_pred)
+    import numpy as np
+    mask = np.isfinite(y_true) & np.isfinite(y_pred)
+    y_true_clean = y_true[mask]
+    y_pred_clean = y_pred[mask]
+    if len(y_true_clean) == 0:
+        raise ValueError("All values in y_true or y_pred are NaN or inf.")
+    mape = mean_absolute_percentage_error(y_true_clean, y_pred_clean)
     rmse = mean_squared_error(y_true, y_pred, squared=False)
     r2 = r2_score(y_true, y_pred)
     return train_df, test_df, pred_test, future_fc, (mape, rmse, r2)
