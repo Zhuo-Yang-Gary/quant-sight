@@ -5,19 +5,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from datetime import datetime, timedelta
-import re
 import time
 
-# 页面配置
-st.set_page_config(page_title="AI Stock Forecast Dashboard", layout="wide")
-st.title("AI Stock Forecast Dashboard")
+# 页面基本配置
+st.set_page_config(page_title="MSFT & NVDA Forecast", layout="wide")
+st.title("MSFT & NVDA Future Price Forecast")
 
-# ——— 左侧：输入股票代码与按钮 ———
-ticker_input = st.sidebar.text_input("Ticker (1–4 letters)", max_chars=4)
-ticker = ticker_input.strip().upper()
-if ticker and not re.fullmatch(r"[A-Z]{1,4}", ticker):
-    st.sidebar.error("Invalid format: Please enter 1–4 letters (A–Z only).")
-    st.stop()
+# ——— 侧边栏：公司与预测时长选择 ———
+company = st.sidebar.selectbox(
+    "Select Company",
+    ["Microsoft (MSFT)", "NVIDIA (NVDA)"]
+)
+ticker = "MSFT" if company.startswith("Microsoft") else "NVDA"
 
 forecast_options = {
     "1 Month": 22,
@@ -28,60 +27,66 @@ forecast_options = {
 forecast_label = st.sidebar.selectbox("Forecast Horizon", list(forecast_options.keys()))
 forecast_days = forecast_options[forecast_label]
 
+# ——— 侧边栏：触发按钮 ———
 if st.sidebar.button("Load & Forecast", use_container_width=True):
-    if not ticker:
-        st.sidebar.error("Please input a ticker code.")
-        st.stop()
 
-    # ——— 进度条显示下载与计算过程 ———
-    progress = st.progress(0, text="Starting...")
-    time.sleep(0.2)
-    progress.progress(20, text="Downloading data...")
+    # 进度条：开始 → 下载 → 处理 → 完成
+    progress = st.progress(0, text="Initializing...")
+    time.sleep(0.1)
+    progress.progress(20, text="Downloading historical data...")
 
-    today = datetime.today().strftime("%Y-%m-%d")
-    df = yf.download(ticker, start="2020-01-01", end=today)
+    # 下载过去三年数据
+    end_date = datetime.today().strftime("%Y-%m-%d")
+    start_date = (datetime.today() - timedelta(days=3*365)).strftime("%Y-%m-%d")
+    df = yf.download(ticker, start=start_date, end=end_date)
 
     progress.progress(60, text="Processing data...")
-    time.sleep(0.2)
+    time.sleep(0.1)
 
+    # 检查数据有效性
     if df.empty:
-        st.error(f"No data found for '{ticker}'.")
+        st.error(f"No data found for {ticker}.")
         progress.empty()
-        st.stop()
+    else:
+        # 线性回归预测
+        df = df.reset_index()
+        df["Days"] = np.arange(len(df)).reshape(-1, 1)
+        model = LinearRegression().fit(df[["Days"]], df["Close"])
+        future_x = np.arange(len(df), len(df) + forecast_days).reshape(-1, 1)
+        future_y = model.predict(future_x)
+        future_dates = pd.date_range(df["Date"].iloc[-1] + timedelta(days=1), periods=forecast_days)
 
-    df.reset_index(inplace=True)
-    df["Days"] = np.arange(len(df)).reshape(-1, 1)
-    model = LinearRegression().fit(df[["Days"]], df["Close"])
-    future_x = np.arange(len(df), len(df) + forecast_days).reshape(-1, 1)
-    future_y = model.predict(future_x)
-    future_dates = pd.date_range(df["Date"].iloc[-1] + timedelta(days=1), periods=forecast_days)
+        progress.progress(100, text="Forecast complete")
+        time.sleep(0.2)
+        progress.empty()
 
-    progress.progress(100, text="Complete!")
-    time.sleep(0.3)
-    progress.empty()
+        # 可视化历史价格与预测
+        st.subheader(f"{company} Historical & {forecast_label} Forecast")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(df["Date"], df["Close"], label="Historical")
+        ax.plot(future_dates, future_y, linestyle="--", label="Forecast")
+        ax.set_title(f"{ticker} Price Forecast")
+        ax.legend()
+        st.pyplot(fig)
 
-    # ——— 图表展示 ———
-    st.subheader(f"{ticker} Historical & {forecast_label} Forecast")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(df["Date"], df["Close"], label="Historical")
-    ax.plot(future_dates, future_y, linestyle="--", label="Forecast")
-    ax.set_title(f"{ticker} Forecast")
-    ax.legend()
-    st.pyplot(fig)
-
-# ——— 右侧：固定作者卡片 ———
+# ——— 固定右上：作者介绍卡片 ———
 author_card = """
-<div style='position:fixed; right:30px; top:100px; width:320px;
-            background-color:#2c2c2c; color:white; padding:20px;
-            border-radius:12px; box-shadow:0px 4px 12px rgba(0,0,0,0.3);'>
-  <h3>About the Author</h3>
-  <p><strong>Zhuo Yang</strong></p>
-  <p>B.Sc. Computing, Software Development</p>
-  <p>University of Sydney (2023–2026)</p>
-  <hr style='border:0.5px solid #444;'/>
-  <p>Wolli Creek, NSW</p>
-  <p>Email: <a href='mailto:graysonyang@outlook.com' style='color:#9cf;'>graysonyang@outlook.com</a></p>
-  <p><a href='https://github.com/Zhuo-Yang-Gary' target='_blank' style='color:#9cf;'>GitHub Profile</a></p>
+<div style="
+    position:fixed; top:20px; right:20px;
+    width:240px; max-height:300px; overflow:auto;
+    background-color:#2c2c2c; color:#ffffff;
+    padding:15px; border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    z-index:100;
+">
+  <h4 style="margin:0 0 10px 0;">About the Author</h4>
+  <p style="margin:0;"><strong>Zhuo Yang</strong></p>
+  <p style="margin:0;">B.Sc. Computing, Software Development</p>
+  <p style="margin:0;">University of Sydney (2023–2026)</p>
+  <hr style="border:0.5px solid #444; margin:10px 0;"/>
+  <p style="margin:0;">Location: Wolli Creek, NSW</p>
+  <p style="margin:0;">Email: <a href="mailto:graysonyang@outlook.com" style="color:#9cf;">graysonyang@outlook.com</a></p>
+  <p style="margin:0;"><a href="https://github.com/Zhuo-Yang-Gary" target="_blank" style="color:#9cf;">GitHub Profile</a></p>
 </div>
 """
 st.markdown(author_card, unsafe_allow_html=True)
