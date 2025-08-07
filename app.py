@@ -21,9 +21,14 @@ with st.container():
         border-radius: 8px;
         margin-bottom: 20px;
         font-size: 14px;
+        line-height: 1.6;
     '>
-        <strong>About the Author</strong> — Zhuo Yang, B.Computing (Software Development), University of Sydney (2023–2026). 
-        Location: Wolli Creek, NSW · <a href="mailto:graysonyang@outlook.com" style="color:#79b8ff;">graysonyang@outlook.com</a> · +61 431 598 186
+        <strong>About the Author</strong><br>
+        Zhuo Yang, B.Computing (Software Development), University of Sydney (August 2023 – March 2026).<br>
+        Available from December 1st 2025<br>
+        Location: Wolli Creek, NSW<br>
+        <a href="mailto:graysonyang@outlook.com" style="color:#79b8ff;">graysonyang@outlook.com</a><br>
+        +61 431 598 186
     </div>
     """, unsafe_allow_html=True)
 
