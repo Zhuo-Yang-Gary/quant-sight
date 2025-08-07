@@ -9,7 +9,8 @@ with st.sidebar:
     st.markdown("请选择公司和预测时间范围后点击下方按钮开始预测。")
     company = st.selectbox("Select Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
     horizon = st.selectbox("Forecast Horizon", ["1 Month", "3 Months", "6 Months"])
-    st.button("Load & Forecast")
+    if st.button("Load & Forecast"):
+        pass  # 防止缩进错误，按钮逻辑实际在主流程处理
 
 
 main_col, author_col = st.columns([5, 1])
