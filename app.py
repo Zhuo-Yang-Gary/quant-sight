@@ -17,14 +17,14 @@ with st.sidebar:
     st.markdown("请选择公司和预测时间范围后点击下方按钮开始预测。")
     company = st.selectbox("Select Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
     horizon = st.selectbox("Forecast Horizon", ["1 Month", "3 Months", "6 Months"])
-    load = st.button("Load & Forecast")
+    load = st.button("Load & Forecast", key="load_forecast_main")
     st.header("Select Company")
     company = st.selectbox("Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
     st.header("Forecast Horizon")
     horizon_label = st.selectbox("Horizon", ["1 Month", "3 Months", "6 Months", "1 Year"])
     horizon_map = {"1 Month": 30, "3 Months": 90, "6 Months": 180, "1 Year": 365}
     forecast_days = horizon_map[horizon_label]
-    run = st.button("Load & Forecast")
+    run = st.button("Load & Forecast", key="load_forecast_main")
 
 # ——— Author Card on Right ———
 author_html = """
@@ -158,3 +158,15 @@ if run:
 #         """,
 #         unsafe_allow_html=True
 #     )
+
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("#### About the Author")
+st.sidebar.markdown(
+    """
+    **Zhuo Yang**  
+    - Software Developer  
+    - Focus: Quantitative Finance, Forecast Modeling  
+    - [GitHub](https://github.com/yourname) | [LinkedIn](https://linkedin.com/in/yourname)
+    """
+)
