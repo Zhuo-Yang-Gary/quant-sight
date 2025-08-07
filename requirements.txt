@@ -8,5 +8,5 @@ numpy==1.26.4
 
 # Prophet 依赖
 Cython>=0.22
-pystan==2.19.1.1
 prophet==1.1.5
+rich==13.9.4
