@@ -9,8 +9,7 @@ from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, 
 
 # ——— Page Configuration ———
 st.set_page_config(page_title="MSFT & NVDA Stock Forecast", layout="wide")
-st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</h1>",
-            unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</h1>", unsafe_allow_html=True)
 
 # ——— Sidebar ———
 with st.sidebar:
@@ -22,21 +21,34 @@ with st.sidebar:
     forecast_days = horizon_map[horizon_label]
     run = st.button("Load & Forecast")
 
-    st.markdown("---")
-    st.markdown(
-        """
-        <div style='background:#2e2f31; padding:16px; border-radius:10px; color:#fff; position:fixed; bottom:20px; width:260px;'>
-          <h4>About the Author</h4>
-          <p><b>Zhuo Yang</b><br/>
-          B.Computing, Software Development<br/>
-          University of Sydney (Augus 2023 – March 2026)</p>
-          <p>Wolli Creek, NSW<br/>
-          +61 431 598 186<br/>
-          <a style='color:#61afef;' href='mailto:gravsonyang@outlook.com'>gravsonyang@outlook.com</a></p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# ——— Author Card on Right ———
+author_html = """
+<style>
+#author-card {
+  position: fixed;
+  top: 80px;        /* 下移到标题正下方 */
+  right: 20px;
+  width: 280px;
+  background-color: #2e2f31;
+  color: #ffffff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: -2px 2px 8px rgba(0,0,0,0.4);
+  z-index: 1000;
+}
+#author-card a { color: #61afef; text-decoration: none; }
+</style>
+<div id="author-card">
+  <h4>About the Author</h4>
+  <p><b>Zhuo Yang</b><br/>
+  B.Sc. Computing, Software Development<br/>
+  University of Sydney (2023–2026)</p>
+  <p>Location: Wolli Creek, NSW<br/>
+  +61 431 598 186<br/>
+  <a href="mailto:gravsonvana@outlook.com">gravsonvana@outlook.com</a></p>
+</div>
+"""
+st.markdown(author_html, unsafe_allow_html=True)
 
 # ——— Helpers ———
 def load_data(ticker: str) -> pd.DataFrame:
@@ -53,20 +65,13 @@ def load_data(ticker: str) -> pd.DataFrame:
     return pd.DataFrame()
 
 def train_and_forecast(df: pd.DataFrame, days: int):
-    # split train/test
     train_df = df.iloc[:-days].copy()
     test_df = df.iloc[-days:].copy()
-
-    # fit Prophet
     m = Prophet(daily_seasonality=True)
     m.fit(train_df)
-
-    # make future frame and forecast
     future = m.make_future_dataframe(periods=days)
     forecast = m.predict(future)
-
-    # predictions on test period
-    pred_on_test = (
+    pred_test = (
         forecast.set_index("ds")
                 .reindex(test_df["ds"])
                 .rename(columns={"yhat": "yhat_test",
@@ -74,20 +79,15 @@ def train_and_forecast(df: pd.DataFrame, days: int):
                                  "yhat_upper": "yhat_test_upper"})
                 .reset_index()
     )
-
-    # future-only forecast
     future_fc = forecast[forecast["ds"] > train_df["ds"].max()][
         ["ds", "yhat", "yhat_lower", "yhat_upper"]
     ].copy()
-
-    # compute metrics
     y_true = test_df["y"].values
-    y_pred = pred_on_test["yhat_test"].values
+    y_pred = pred_test["yhat_test"].values
     mape = mean_absolute_percentage_error(y_true, y_pred)
     rmse = mean_squared_error(y_true, y_pred, squared=False)
     r2 = r2_score(y_true, y_pred)
-
-    return train_df, test_df, pred_on_test, future_fc, (mape, rmse, r2)
+    return train_df, test_df, pred_test, future_fc, (mape, rmse, r2)
 
 def plot_results(train, test, pred_test, future_fc, metrics, display_name, horizon_label):
     mape, rmse, r2 = metrics
@@ -95,47 +95,32 @@ def plot_results(train, test, pred_test, future_fc, metrics, display_name, horiz
     ### Model Evaluation on Last {horizon_label}
     - **MAPE:** {mape:.2%}  
     - **RMSE:** {rmse:.2f}  
-    - **R²:** {r2:.3f}  
+    - **R²:** {r2:.3f}
     """)
-
     plt.style.use("dark_background")
     fig, ax = plt.subplots(figsize=(10, 5))
-
-    # plot actual train & test
     ax.plot(train["ds"], train["y"], color="white", label="Train Actual")
     ax.plot(test["ds"], test["y"], color="#61afef", label="Test Actual")
-
-    # CI & forecast on test
-    ax.fill_between(
-        pred_test["ds"],
-        pred_test["yhat_test_lower"],
-        pred_test["yhat_test_upper"],
-        color="orange", alpha=0.3, label="95% CI (Test)"
-    )
+    ax.fill_between(pred_test["ds"],
+                    pred_test["yhat_test_lower"],
+                    pred_test["yhat_test_upper"],
+                    color="orange", alpha=0.3, label="95% CI (Test)")
     ax.plot(pred_test["ds"], pred_test["yhat_test"], "--", color="orange", label="Forecast on Test")
-
-    # future forecast CI & line
-    ax.fill_between(
-        future_fc["ds"],
-        future_fc["yhat_lower"],
-        future_fc["yhat_upper"],
-        color="gray", alpha=0.2, label="95% CI (Future)"
-    )
+    ax.fill_between(future_fc["ds"],
+                    future_fc["yhat_lower"],
+                    future_fc["yhat_upper"],
+                    color="gray", alpha=0.2, label="95% CI (Future)")
     ax.plot(future_fc["ds"], future_fc["yhat"], "--", color="lime", label="Future Forecast")
-
     ax.set_title(f"{display_name} Forecast – {horizon_label}", color="white")
-    ax.set_xlabel("Date", color="white")
-    ax.set_ylabel("Price (USD)", color="white")
-    ax.tick_params(colors="white")
-    ax.legend(facecolor="#2e2f31", edgecolor="white", labelcolor="white")
+    ax.set_xlabel("Date", color="white"); ax.set_ylabel("Price (USD)", color="white")
+    ax.tick_params(colors="white"); ax.legend(facecolor="#2e2f31", edgecolor="white", labelcolor="white")
     st.pyplot(fig)
 
 # ——— Main Execution ———
 if run:
     ticker = "MSFT" if "Microsoft" in company else "NVDA"
-    display_name = company
     df = load_data(ticker)
-
+    display_name = company
     if df.empty:
         st.error("No data available. Please check the CSV file.")
     else:
