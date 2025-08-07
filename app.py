@@ -48,34 +48,6 @@ with st.sidebar:
     forecast_days = horizon_map[horizon_label]
     run = st.button("Load & Forecast")
 
-author_html = """
-<style>
-#author-card {
-  position: fixed;
-  top: 80px;        /* 下移到标题正下方 */
-  right: 20px;
-  width: 280px;
-  background-color: #2e2f31;
-  color: #ffffff;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: -2px 2px 8px rgba(0,0,0,0.4);
-  z-index: 1000;
-}
-#author-card a { color: #61afef; text-decoration: none; }
-</style>
-<div id="author-card">
-  <h4>About the Author</h4>
-  <p><b>Zhuo Yang</b><br/>
-  B.Sc. Computing, Software Development<br/>
-  University of Sydney (2023–2026)</p>
-  <p>Location: Wolli Creek, NSW<br/>
-  +61 431 598 186<br/>
-  <a href="mailto:gravsonvana@outlook.com">gravsonvana@outlook.com</a></p>
-</div>
-"""
-st.markdown(author_html, unsafe_allow_html=True)
-
 # ——— Helpers ———
 def load_data(ticker: str) -> pd.DataFrame:
     path_map = {
