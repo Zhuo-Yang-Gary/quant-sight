@@ -9,6 +9,11 @@ with st.sidebar:
     st.markdown("请选择公司和预测时间范围后点击下方按钮开始预测。")
     company = st.selectbox("Select Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
     horizon = st.selectbox("Forecast Horizon", ["1 Month", "3 Months", "6 Months"])
+    load = st.button("Load & Forecast")
+    st.markdown("### 使用说明")
+    st.markdown("请选择公司和预测时间范围后点击下方按钮开始预测。")
+    company = st.selectbox("Select Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
+    horizon = st.selectbox("Forecast Horizon", ["1 Month", "3 Months", "6 Months"])
     if st.button("Load & Forecast"):
         pass  # 防止缩进错误，按钮逻辑实际在主流程处理
 
@@ -31,6 +36,11 @@ st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</
 
 # ——— Sidebar ———
 with st.sidebar:
+    st.markdown("### 使用说明")
+    st.markdown("请选择公司和预测时间范围后点击下方按钮开始预测。")
+    company = st.selectbox("Select Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
+    horizon = st.selectbox("Forecast Horizon", ["1 Month", "3 Months", "6 Months"])
+    load = st.button("Load & Forecast")
     st.header("Select Company")
     company = st.selectbox("Company", ["Microsoft (MSFT)", "NVIDIA (NVDA)"])
     st.header("Forecast Horizon")
