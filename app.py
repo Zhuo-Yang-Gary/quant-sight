@@ -9,6 +9,24 @@ from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, 
 
 # ——— Page Configuration ———
 st.set_page_config(page_title="MSFT & NVDA Stock Forecast", layout="wide")
+
+# ——— Author Info Banner at Top (Scrolls with page) ———
+with st.container():
+    st.markdown("""
+    <div style='
+        width: 100%;
+        background-color: #2d2d2d;
+        color: white;
+        padding: 10px 25px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    '>
+        <strong>About the Author</strong> — Zhuo Yang, B.Sc. Computing (Software Development), University of Sydney (2023–2026). 
+        Location: Wolli Creek, NSW · <a href="mailto:gravsonvana@outlook.com" style="color:#79b8ff;">gravsonvana@outlook.com</a> · +61 431 598 186
+    </div>
+    """, unsafe_allow_html=True)
+
 st.markdown("<h1 style='text-align: center;'>MSFT & NVDA Future Price Forecast</h1>", unsafe_allow_html=True)
 
 # ——— Sidebar ———
@@ -31,7 +49,7 @@ with st.sidebar:
     run = st.button("Load & Forecast")
 
 
-# ——— Author Card (Fixed Bottom Right) ———
+# Removed fixed author card
 st.markdown("""
 <style>
 .author-card {
